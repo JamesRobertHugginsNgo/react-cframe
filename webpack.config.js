@@ -1,20 +1,30 @@
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+// const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
 const TerserWebpackPlugin = require('terser-webpack-plugin');
 const webpack = require('webpack');
 
 module.exports = (env, { mode }) => {
+	const isTest = env.test;
 	const isProduction = mode === 'production';
 
 	return {
 		devtool: !isProduction && 'cheap-module-source-map',
-		entry: path.resolve(__dirname, './test/src', 'index.js'),
+		entry: path.resolve(...[
+			__dirname,
+			isTest && './test',
+			'./src',
+			'index.js'
+		].filter(Boolean)),
 		output: {
 			clean: true,
-			path: path.resolve(__dirname, './test/dist'),
-			filename: 'scripts/[name].[contenthash:8].js'
+			path: path.resolve(...[
+				__dirname,
+				isTest && './test',
+				'./dist'
+			].filter(Boolean)),
+			filename: isTest ? 'scripts/[name].[contenthash:8].js' : 'index.js'
 		},
 		module: {
 			rules: [
@@ -33,14 +43,16 @@ module.exports = (env, { mode }) => {
 				{
 					test: /\.css$/,
 					use: [
-						isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
+						// isProduction ? MiniCssExtractPlugin.loader :
+						'style-loader',
 						'css-loader'
 					]
 				},
 				{
 					test: /\.module.css$/,
 					use: [
-						isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
+						// isProduction ? MiniCssExtractPlugin.loader :
+						'style-loader',
 						{
 							loader: 'css-loader',
 							options: {
@@ -54,7 +66,8 @@ module.exports = (env, { mode }) => {
 				{
 					test: /\.s[ac]ss$/,
 					use: [
-						isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
+						// isProduction ? MiniCssExtractPlugin.loader :
+						'style-loader',
 						{
 							loader: 'css-loader',
 							options: {
@@ -70,7 +83,7 @@ module.exports = (env, { mode }) => {
 						}
 					]
 				},
-				{
+				isTest && {
 					test: /\.(png|jpg|gif)$/i,
 					use: {
 						loader: 'url-loader',
@@ -95,29 +108,29 @@ module.exports = (env, { mode }) => {
 					resourceQuery: { not: [/url/] }, // exclude react component if *.svg?url
 					use: ['@svgr/webpack']
 				},
-				{
+				isTest && {
 					test: /\.(eot|otf|ttf|woff|woff2)$/,
 					loader: require.resolve('file-loader'),
 					options: {
 						name: 'media/[name].[hash:8].[ext]'
 					}
 				}
-			]
+			].filter(Boolean)
 		},
 		resolve: {
 			extensions: ['.js', '.jsx']
 		},
 		plugins: [
-			isProduction && new MiniCssExtractPlugin({
-				filename: 'scripts/[name].[contenthash:8].css',
-				chunkFilename: 'scripts/[name].[contenthash:8].chunk.css'
-			}),
+			// isProduction && new MiniCssExtractPlugin({
+			// 	filename: 'scripts/[name].[contenthash:8].css',
+			// 	chunkFilename: 'scripts/[name].[contenthash:8].chunk.css'
+			// }),
 			new webpack.DefinePlugin({
 				'process.env.NODE_ENV': JSON.stringify(
 					isProduction ? 'production' : 'development'
 				)
 			}),
-			new HtmlWebpackPlugin({
+			isTest && new HtmlWebpackPlugin({
 				inject: false,
 				template: path.resolve(__dirname, './test/src', 'index.html')
 			})
@@ -142,7 +155,7 @@ module.exports = (env, { mode }) => {
 				}),
 				new CssMinimizerPlugin()
 			],
-			splitChunks: {
+			splitChunks: isTest && {
 				chunks: 'all',
 				minSize: 0,
 				maxInitialRequests: 20,
@@ -162,7 +175,7 @@ module.exports = (env, { mode }) => {
 					}
 				}
 			},
-			runtimeChunk: 'single'
+			runtimeChunk: isTest && 'single'
 		},
 		devServer: {
 			compress: true,

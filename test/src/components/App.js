@@ -1,6 +1,6 @@
 import React from 'react';
 
-import CFrame from '../../../index';
+import CFrame from '../../../src/index';
 
 export default class App extends React.Component {
 	render() {
@@ -8,7 +8,7 @@ export default class App extends React.Component {
 			{ text: 'Root', link: '#' },
 			{ text: 'Branch', link: '#' },
 			{ text: 'Leaf' }
-		]
+		];
 
 		return (
 			<CFrame breadcrumbs={breadcrumbs}>
